@@ -1,55 +1,64 @@
-// script.js
+const input = document.getElementById("todo-input");
+const addBtn = document.getElementById("add-btn");
+const list = document.getElementById("todo-list");
 
-// Load tasks from localStorage when page loads
-window.onload = function () {
-  const savedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
-  savedTasks.forEach(task => addTask(task.text, task.done));
+// Load todos on page load
+window.onload = () => {
+  const savedTodos = JSON.parse(localStorage.getItem("todos")) || [];
+  savedTodos.forEach(todo => addTodo(todo.text, todo.done));
 };
 
-function addTask(taskText = null, isDone = false) {
-  const taskInput = document.getElementById("taskInput");
-  const text = taskText || taskInput.value;
+// Save todos to localStorage
+function saveTodos() {
+  const todos = [];
+  document.querySelectorAll("#todo-list li").forEach(li => {
+    todos.push({
+      text: li.firstChild.textContent,
+      done: li.classList.contains("done")
+    });
+  });
+  localStorage.setItem("todos", JSON.stringify(todos));
+}
 
-  if (text === "") {
-    alert("Please task likho!");
-    return;
-  }
-
+// Add a new todo
+function addTodo(text, done = false) {
   const li = document.createElement("li");
 
-  li.innerHTML = `
-    <input type="checkbox" ${isDone ? "checked" : ""} onclick="toggleDone(this)">
-    <span class="${isDone ? "done" : ""}">${text}</span>
-    <button onclick="deleteTask(this)">X</button>
-  `;
+  const span = document.createElement("span");
+  span.textContent = text;
+  li.appendChild(span);
 
-  document.getElementById("taskList").appendChild(li);
-  taskInput.value = "";
+  if (done) li.classList.add("done");
 
-  saveTasks();
-}
-
-function deleteTask(button) {
-  button.parentElement.remove();
-  saveTasks();
-}
-
-function toggleDone(checkbox) {
-  const span = checkbox.nextElementSibling;
-  span.classList.toggle("done");
-  saveTasks();
-}
-
-function saveTasks() {
-  const tasks = [];
-  document.querySelectorAll("#taskList li").forEach(li => {
-    const text = li.querySelector("span").innerText;
-    const done = li.querySelector("input[type='checkbox']").checked;
-    tasks.push({ text: text, done: done });
+  // Done button
+  const doneBtn = document.createElement("button");
+  doneBtn.textContent = "✅";
+  doneBtn.classList.add("done-btn");
+  doneBtn.addEventListener("click", () => {
+    li.classList.toggle("done");
+    saveTodos();
   });
-  localStorage.setItem("tasks", JSON.stringify(tasks));
+
+  // Delete button
+  const deleteBtn = document.createElement("button");
+  deleteBtn.textContent = "❌";
+  deleteBtn.classList.add("delete-btn");
+  deleteBtn.addEventListener("click", () => {
+    li.remove();
+    saveTodos();
+  });
+
+  li.appendChild(doneBtn);
+  li.appendChild(deleteBtn);
+
+  list.appendChild(li);
+  saveTodos();
 }
-function clearAll() {
-  document.getElementById("taskList").innerHTML = "";
-  localStorage.removeItem("tasks");
-}
+
+addBtn.addEventListener("click", () => {
+  const todoText = input.value.trim();
+  if (todoText !== "") {
+    addTodo(todoText);
+    input.value = "";
+  }
+});
